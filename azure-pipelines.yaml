@@ -1,0 +1,100 @@
+trigger:
+- master
+    
+resources:
+- repo: self
+    
+variables:
+# Container registry service connection established during pipeline creation
+  dockerRegistryServiceConnection: 'delphidemouaenorthacr.azurecr.io'
+  imageRepository: 'spring-boot-app'
+  containerRegistry: 'delphidemouaenorthacr.azurecr.io'
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
+  storage_account_name: "dephidemouaenorthsa"
+  storage_access_key: "MHaOg1opAt1S1E/wJ4L421sNy9OOFuKTEvvichiqFXTTXhMz5CljOoKl81/AOh/6+HeJQbhpqNQg6mSOBzABvQ=="
+  storage_container_name: "tfstate"
+  vmImageName: 'ubuntu-latest'
+  subscription_id: "2e712c95-b365-4cf5-8152-133fb6de656a"
+  tenant_id: "abfb8a77-f627-4ede-8bba-844c022009c3"
+  client_id: "1bab0f4b-0dd9-4b64-990f-e9294b255c83"
+  client_secret: "hwTT~hd9b6edi010RESc~c-57xTVf~_SqN"
+
+    
+stages:
+  - stage: InfrastructureBuild
+    displayName: Create Infrastructuure Using Terraform
+    jobs:  
+    - job: TFflow
+      displayName: TFflow
+      pool:
+        vmImage: $(vmImageName)
+      steps:
+      - script: |
+         terraform version
+         
+         terraform init tf-files/
+         
+         terraform plan -var='subscription_id=$(subscription_id)' \
+         -var='client_id=$(client_id)' \
+         -var='client_secret=$(client_secret)' \
+         -var='tenant_id=$(tenant_id)' tf-files/
+
+         terraform apply --auto-approve -var='subscription_id=$(subscription_id)' \
+         -var='client_id=$(client_id)' \
+         -var='client_secret=$(client_secret)' \
+         -var='tenant_id=$(tenant_id)' tf-files/
+
+  - stage: Build
+    displayName: Build and push Image to ACR
+    jobs:  
+    - job: Build
+      displayName: Build
+      pool:
+        vmImage: $(vmImageName)
+      steps:
+      - task: Docker@2
+        displayName: Build and push an image to container registry
+        inputs:
+          command: buildAndPush
+          repository: $(imageRepository)
+          dockerfile: $(dockerfilePath)
+          containerRegistry: $(dockerRegistryServiceConnection)
+          tags: |
+            $(tag)
+
+
+  - stage: Deploy
+    displayName: Deploy to AKS
+    jobs:  
+    - job: Deploy
+      displayName: Deploy
+      pool:
+        vmImage: $(vmImageName)
+      steps:
+      - task: HelmInstaller@0
+        inputs:
+          helmVersion: 'latest'
+          installKubectl: true
+
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: 'Azure subscription 1(2e712c95-b365-4cf5-8152-133fb6de656a)'
+          azureResourceGroup: 'delphi-demo-uaenorth-rg'
+          kubernetesCluster: 'delphi-demo-uaenorth-aks'
+          namespace: 'default'
+          command: 'upgrade'
+          chartType: 'FilePath'
+          chartPath: './helm-charts'
+          releaseName: 'app1'
+          overrideValues: 'imagename=$(containerRegistry)/$(imageRepository):$(tag)'
+          waitForExecution: false
+
+      - task: Kubernetes@1
+        inputs:
+          connectionType: 'Kubernetes Service Connection'
+          kubernetesServiceEndpoint: 'delphi-demo-uaenorth-aks'
+          namespace: 'default'
+          command: 'get'
+          arguments: 'svc'

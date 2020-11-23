@@ -1,0 +1,5 @@
+imagename: latest
+replicas: 2
+podname: spring-app
+svcname: svc-spring-app
+port: 8080

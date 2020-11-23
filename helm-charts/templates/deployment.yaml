@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.podname }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.podname }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.podname }}
+    spec:
+      containers:
+      - image: {{ .Values.imagename }}
+        imagePullPolicy: Always
+        name: {{ .Values.podname }}
+        ports:
+        - containerPort: {{ .Values.port }}
+        resources: {}
+          
+      hostname: {{ .Values.podname }}
+      restartPolicy: Always
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.svcname }}
+spec:
+  selector:
+    app: {{ .Values.podname }}
+  ports:
+  - name: https
+    port: {{ .Values.port }}
+    targetPort: {{ .Values.port }}
+  type: LoadBalancer
+    
