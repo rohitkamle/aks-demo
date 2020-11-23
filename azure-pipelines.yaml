@@ -15,10 +15,7 @@ variables:
   storage_access_key: "MHaOg1opAt1S1E/wJ4L421sNy9OOFuKTEvvichiqFXTTXhMz5CljOoKl81/AOh/6+HeJQbhpqNQg6mSOBzABvQ=="
   storage_container_name: "tfstate"
   vmImageName: 'ubuntu-latest'
-  subscription_id: "2e712c95-b365-4cf5-8152-133fb6de656a"
-  tenant_id: "abfb8a77-f627-4ede-8bba-844c022009c3"
-  client_id: "1bab0f4b-0dd9-4b64-990f-e9294b255c83"
-  client_secret: "hwTT~hd9b6edi010RESc~c-57xTVf~_SqN"
+
 
     
 stages:
