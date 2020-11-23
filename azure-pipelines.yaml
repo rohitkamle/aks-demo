@@ -11,9 +11,6 @@ variables:
   containerRegistry: 'delphidemouaenorthacr.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
-  storage_account_name: "dephidemouaenorthsa"
-  storage_access_key: "MHaOg1opAt1S1E/wJ4L421sNy9OOFuKTEvvichiqFXTTXhMz5CljOoKl81/AOh/6+HeJQbhpqNQg6mSOBzABvQ=="
-  storage_container_name: "tfstate"
   vmImageName: 'ubuntu-latest'
 
 
