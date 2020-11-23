@@ -12,9 +12,7 @@ variables:
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
   vmImageName: 'ubuntu-latest'
-
-
-    
+   
 stages:
   - stage: InfrastructureBuild
     displayName: Create Infrastructuure Using Terraform
@@ -57,7 +55,6 @@ stages:
           tags: |
             $(tag)
 
-
   - stage: Deploy
     displayName: Deploy to AKS
     jobs:  
@@ -84,11 +81,3 @@ stages:
           releaseName: 'app1'
           overrideValues: 'imagename=$(containerRegistry)/$(imageRepository):$(tag)'
           waitForExecution: false
-
-      - task: Kubernetes@1
-        inputs:
-          connectionType: 'Kubernetes Service Connection'
-          kubernetesServiceEndpoint: 'delphi-demo-uaenorth-aks'
-          namespace: 'default'
-          command: 'get'
-          arguments: 'svc'
