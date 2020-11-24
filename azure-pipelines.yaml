@@ -6,9 +6,10 @@ resources:
     
 variables:
 # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: 'delphidemouaenorthacr.azurecr.io'
+  dockerRegistryServiceConnection: 'delphidemouaenorthacr'
   imageRepository: 'spring-boot-app'
   containerRegistry: 'delphidemouaenorthacr.azurecr.io'
+  azureSubscription: 'Free Trial(ec2c3006-a33e-4636-99f8-768c9067b097)'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
   vmImageName: 'ubuntu-latest'
@@ -24,20 +25,65 @@ stages:
       steps:
       - script: |
          terraform version
-
+         
          terraform init \
          -backend-config='resource_group_name=dephidemouaenorthsa-rg' \
          -backend-config='storage_account_name=dephidemouaenorthsa' \
          -backend-config='container_name=terraform' \
          -backend-config='key=terraform.tfstate' \
          -backend-config='access_key=$(akey)' tf-files/ 
-
+         
          terraform plan -var='subscription_id=$(sid)' \
          -var='client_id=$(cid)' \
          -var='client_secret=$(csec)' \
          -var='tenant_id=$(tid)' tf-files/
-
+         
          terraform apply --auto-approve -var='subscription_id=$(sid)' \
          -var='client_id=$(cid)' \
          -var='client_secret=$(csec)' \
          -var='tenant_id=$(tid)' tf-files/
+
+  - stage: Build
+    displayName: Build and push Image to ACR
+    jobs:  
+    - job: Build
+      displayName: Build
+      pool:
+        vmImage: $(vmImageName)
+      steps:
+      - task: Docker@2
+        displayName: Build and push an image to container registry
+        inputs:
+          command: buildAndPush
+          repository: $(imageRepository)
+          dockerfile: $(dockerfilePath)
+          containerRegistry: $(dockerRegistryServiceConnection)
+          tags: |
+            $(tag)
+
+  - stage: Deploy
+    displayName: Deploy to AKS
+    jobs:  
+    - job: Deploy
+      displayName: Deploy
+      pool:
+        vmImage: $(vmImageName)
+      steps:
+      - task: HelmInstaller@0
+        inputs:
+          helmVersion: 'latest'
+          installKubectl: true
+
+      - task: HelmDeploy@0
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscription: '$(azureSubscription)'
+          azureResourceGroup: 'delphi-demo-uaenorth-rg'
+          kubernetesCluster: 'delphi-demo-uaenorth-aks'
+          namespace: 'default'
+          command: 'upgrade'
+          chartType: 'FilePath'
+          chartPath: './helm-charts'
+          releaseName: 'app1'
+          overrideValues: 'imagename=$(containerRegistry)/$(imageRepository):$(tag)'
+          waitForExecution: false

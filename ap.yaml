@@ -1,0 +1,16 @@
+terraform init \
+-backend-config='resource_group_name=dephidemouaenorthsa-rg' \
+-backend-config='storage_account_name=dephidemouaenorthsa' \
+-backend-config='container_name=terraform' \
+-backend-config='key=terraform.tfstate' \
+-backend-config='access_key=$(akey)' tf-files/ 
+
+terraform plan -var='subscription_id=$(sid)' \
+-var='client_id=$(cid)' \
+-var='client_secret=$(csec)' \
+-var='tenant_id=$(tid)' tf-files/
+
+terraform apply --auto-approve -var='subscription_id=$(sid)' \
+-var='client_id=$(cid)' \
+-var='client_secret=$(csec)' \
+-var='tenant_id=$(tid)' tf-files/
