@@ -37,7 +37,7 @@ stages:
          -var='client_secret=$(csec)' \
          -var='tenant_id=$(tid)' tf-files/
 
-         terraform apply --auto-approve -var='subscription_id=$(subscription_id)' \
-         -var='client_id=$(client_id)' \
-         -var='client_secret=$(client_secret)' \
-         -var='tenant_id=$(tenant_id)' tf-files/
+         terraform apply --auto-approve -var='subscription_id=$(sid)' \
+         -var='client_id=$(cid)' \
+         -var='client_secret=$(csec)' \
+         -var='tenant_id=$(tid)' tf-files/
