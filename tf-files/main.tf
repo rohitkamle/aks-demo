@@ -34,7 +34,7 @@ module "aks" {
     rg_name = module.rg.name
     location = "uaenorth"
     aks_name = "delphi-demo-uaenorth-aks"
-    aks_node_count = "2"
+    aks_node_count = "1"
     aks_node_size = "Standard_B2s"
     snet_id = module.snet.id
 
